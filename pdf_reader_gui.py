@@ -28,6 +28,9 @@ class PDFReaderGUI:
         self.pdf_path = None
         self.all_pages_text = []  # 存储所有页面的文本
         self.search_results = []  # 搜索结果列表
+        self.batch_mode = False  # 是否为批量搜索模式
+        self.pdf_directory = None  # 批量搜索的文件夹路径
+        self.pdf_files = []  # 批量搜索的PDF文件列表
 
         # 创建界面
         self.create_widgets()
@@ -47,14 +50,25 @@ class PDFReaderGUI:
         file_frame = ttk.LabelFrame(left_frame, text="文件操作", padding=10)
         file_frame.pack(fill=tk.X, padx=5, pady=5)
 
+        # 按钮容器
+        button_frame = ttk.Frame(file_frame)
+        button_frame.pack(fill=tk.X, pady=(0, 5))
+
         # 打开文件按钮
         ttk.Button(
-            file_frame,
+            button_frame,
             text="打开 PDF 文件",
             command=self.open_file
-        ).pack(fill=tk.X)
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
 
-        # 当前文件显示
+        # 打开文件夹按钮（批量搜索）
+        ttk.Button(
+            button_frame,
+            text="打开文件夹",
+            command=self.open_directory
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+
+        # 当前文件/文件夹显示
         self.file_label = ttk.Label(file_frame, text="未打开文件", foreground="gray")
         self.file_label.pack(fill=tk.X, pady=(5, 0))
 
@@ -112,7 +126,7 @@ class PDFReaderGUI:
         # 结果列表
         self.result_tree = ttk.Treeview(
             result_frame,
-            columns=('page', 'line', 'content'),
+            columns=('file', 'page', 'line', 'content'),
             show='headings',
             yscrollcommand=scrollbar.set,
             height=10
@@ -121,13 +135,15 @@ class PDFReaderGUI:
         scrollbar.config(command=self.result_tree.yview)
 
         # 配置列
+        self.result_tree.heading('file', text='文件')
         self.result_tree.heading('page', text='页码')
         self.result_tree.heading('line', text='行号')
         self.result_tree.heading('content', text='内容预览')
 
+        self.result_tree.column('file', width=100, anchor=tk.W)
         self.result_tree.column('page', width=50, anchor=tk.CENTER)
         self.result_tree.column('line', width=50, anchor=tk.CENTER)
-        self.result_tree.column('content', width=250)
+        self.result_tree.column('content', width=200)
 
         # 绑定双击事件
         self.result_tree.bind('<Double-1>', self.on_result_click)
@@ -168,6 +184,11 @@ class PDFReaderGUI:
             self.pdf_reader = PdfReader(file_path)
             self.pdf_path = Path(file_path)
 
+            # 切换到单文件模式
+            self.batch_mode = False
+            self.pdf_directory = None
+            self.pdf_files = []
+
             # 提取所有页面文本
             self.all_pages_text = []
             for page in self.pdf_reader.pages:
@@ -190,6 +211,60 @@ class PDFReaderGUI:
         except Exception as e:
             messagebox.showerror("错误", f"打开 PDF 文件时出错:\n{str(e)}")
 
+    def open_directory(self):
+        """打开文件夹（批量搜索模式）"""
+        dir_path = filedialog.askdirectory(
+            title="选择包含 PDF 文件的文件夹"
+        )
+
+        if not dir_path:
+            return
+
+        try:
+            dir_path = Path(dir_path)
+
+            # 查找所有PDF文件
+            pdf_files = sorted(dir_path.glob('**/*.pdf'))
+
+            if not pdf_files:
+                messagebox.showwarning("警告", f"在文件夹中没有找到 PDF 文件")
+                return
+
+            # 切换到批量搜索模式
+            self.batch_mode = True
+            self.pdf_directory = dir_path
+            self.pdf_files = pdf_files
+
+            # 更新界面显示
+            self.file_label.config(
+                text=f"文件夹: {dir_path.name}",
+                foreground="black"
+            )
+            self.info_label.config(
+                text=f"找到 {len(pdf_files)} 个 PDF 文件"
+            )
+
+            # 清空右侧显示
+            self.text_display.config(state=tk.NORMAL)
+            self.text_display.delete(1.0, tk.END)
+            info_text = f"批量搜索模式\n\n"
+            info_text += f"文件夹: {dir_path}\n"
+            info_text += f"PDF 文件数: {len(pdf_files)}\n\n"
+            info_text += "请输入搜索内容并点击「开始搜索」\n\n"
+            info_text += "文件列表:\n" + "-" * 60 + "\n"
+            for i, pdf_file in enumerate(pdf_files, 1):
+                info_text += f"{i}. {pdf_file.relative_to(dir_path)}\n"
+            self.text_display.insert(tk.END, info_text)
+            self.text_display.config(state=tk.DISABLED)
+
+            # 清空搜索结果
+            self.clear_search_results()
+
+            messagebox.showinfo("成功", f"已打开文件夹\n找到 {len(pdf_files)} 个 PDF 文件")
+
+        except Exception as e:
+            messagebox.showerror("错误", f"打开文件夹时出错:\n{str(e)}")
+
     def display_all_pages(self):
         """显示所有页面内容"""
         self.text_display.config(state=tk.NORMAL)
@@ -206,15 +281,25 @@ class PDFReaderGUI:
 
     def search_pdf(self):
         """搜索 PDF 内容"""
-        if not self.pdf_reader:
-            messagebox.showwarning("警告", "请先打开 PDF 文件")
-            return
-
         search_term = self.search_entry.get().strip()
         if not search_term:
             messagebox.showwarning("警告", "请输入搜索内容")
             return
 
+        if self.batch_mode:
+            # 批量搜索模式
+            self.search_batch()
+        else:
+            # 单文件搜索模式
+            self.search_single_file()
+
+    def search_single_file(self):
+        """单文件搜索模式"""
+        if not self.pdf_reader:
+            messagebox.showwarning("警告", "请先打开 PDF 文件")
+            return
+
+        search_term = self.search_entry.get().strip()
         case_sensitive = self.case_sensitive_var.get()
 
         # 清空之前的搜索结果
@@ -253,6 +338,7 @@ class PDFReaderGUI:
 
                     # 保存结果
                     result_data = {
+                        'file': self.pdf_path.name,
                         'page': page_num,
                         'line': line_num,
                         'preview': preview,
@@ -282,6 +368,122 @@ class PDFReaderGUI:
             )
             messagebox.showinfo("搜索结果", "未找到匹配内容")
 
+    def search_batch(self):
+        """批量搜索模式"""
+        if not self.pdf_files:
+            messagebox.showwarning("警告", "请先打开文件夹")
+            return
+
+        search_term = self.search_entry.get().strip()
+        case_sensitive = self.case_sensitive_var.get()
+
+        # 清空之前的搜索结果
+        self.clear_search_results()
+
+        # 更新右侧显示
+        self.text_display.config(state=tk.NORMAL)
+        self.text_display.delete(1.0, tk.END)
+        self.text_display.insert(tk.END, f"正在搜索 {len(self.pdf_files)} 个 PDF 文件...\n\n")
+        self.text_display.config(state=tk.DISABLED)
+        self.root.update()
+
+        # 统计信息
+        total_matches = 0
+        total_files_with_matches = 0
+
+        # 遍历每个PDF文件
+        for pdf_file in self.pdf_files:
+            try:
+                reader = PdfReader(pdf_file)
+                file_matches = 0
+
+                # 遍历每一页
+                for page_num in range(len(reader.pages)):
+                    page = reader.pages[page_num]
+                    text = page.extract_text()
+                    lines = text.split('\n')
+
+                    # 在每一行中搜索
+                    for line_num, line in enumerate(lines, 1):
+                        if case_sensitive:
+                            matches = list(re.finditer(re.escape(search_term), line))
+                        else:
+                            matches = list(re.finditer(re.escape(search_term), line, re.IGNORECASE))
+
+                        # 保存匹配结果
+                        for match in matches:
+                            start = match.start()
+                            end = match.end()
+
+                            # 获取上下文（前后各30个字符）
+                            context_start = max(0, start - 30)
+                            context_end = min(len(line), end + 30)
+
+                            before = line[context_start:start]
+                            matched = line[start:end]
+                            after = line[end:context_end]
+
+                            # 构建显示内容
+                            preview = f"...{before}【{matched}】{after}..."
+
+                            # 保存结果
+                            result_data = {
+                                'file': pdf_file.name,
+                                'file_path': pdf_file,
+                                'page': page_num + 1,
+                                'line': line_num,
+                                'preview': preview,
+                                'matched_text': matched,
+                                'full_line': line
+                            }
+                            self.search_results.append(result_data)
+                            file_matches += 1
+                            total_matches += 1
+
+                if file_matches > 0:
+                    total_files_with_matches += 1
+
+            except Exception as e:
+                print(f"处理文件 {pdf_file.name} 时出错: {e}")
+                continue
+
+        # 显示搜索结果
+        self.display_search_results()
+
+        # 显示搜索总结
+        self.text_display.config(state=tk.NORMAL)
+        self.text_display.delete(1.0, tk.END)
+
+        summary = f"批量搜索完成！\n\n"
+        summary += f"搜索内容: '{search_term}'\n"
+        summary += f"区分大小写: {'是' if case_sensitive else '否'}\n"
+        summary += f"{'-' * 60}\n\n"
+        summary += f"📊 统计信息:\n"
+        summary += f"  - 搜索文件总数: {len(self.pdf_files)}\n"
+        summary += f"  - 包含匹配的文件: {total_files_with_matches}\n"
+        summary += f"  - 总匹配次数: {total_matches}\n\n"
+
+        if total_matches > 0:
+            summary += f"请在左侧查看详细结果，双击可查看具体位置。\n"
+        else:
+            summary += f"未找到匹配内容。\n"
+
+        self.text_display.insert(tk.END, summary)
+        self.text_display.config(state=tk.DISABLED)
+
+        # 更新统计信息
+        if total_matches > 0:
+            self.result_count_label.config(
+                text=f"搜索结果: {total_matches} 处匹配，{total_files_with_matches} 个文件",
+                foreground="green"
+            )
+        else:
+            self.result_count_label.config(
+                text="搜索结果: 未找到匹配内容",
+                foreground="red"
+            )
+            messagebox.showinfo("搜索结果", "未找到匹配内容")
+
     def display_search_results(self):
         """显示搜索结果到列表"""
         # 清空列表
@@ -295,6 +497,7 @@ class PDFReaderGUI:
                 tk.END,
                 iid=str(idx),
                 values=(
+                    result['file'],
                     result['page'],
                     result['line'],
                     result['preview']
