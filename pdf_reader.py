@@ -6,6 +6,7 @@ PDF Reader - 一个简单的PDF文件阅读工具
 
 import sys
 import argparse
+import re
 from pathlib import Path
 try:
     from pypdf import PdfReader
@@ -81,6 +82,101 @@ def read_pdf(pdf_path, page_num=None, show_metadata=False):
         return False
 
 
+def search_pdf(pdf_path, search_term, case_sensitive=False, context_chars=50):
+    """
+    在PDF文件中搜索指定内容
+
+    Args:
+        pdf_path: PDF文件路径
+        search_term: 要搜索的文本
+        case_sensitive: 是否区分大小写
+        context_chars: 显示上下文的字符数
+    """
+    try:
+        # 检查文件是否存在
+        path = Path(pdf_path)
+        if not path.exists():
+            print(f"错误: 文件不存在 '{pdf_path}'")
+            return False
+
+        if not path.suffix.lower() == '.pdf':
+            print(f"警告: 文件可能不是PDF格式 '{pdf_path}'")
+
+        # 打开PDF文件
+        reader = PdfReader(pdf_path)
+        num_pages = len(reader.pages)
+
+        # 显示搜索信息
+        print(f"\n{'='*60}")
+        print(f"PDF文件: {path.name}")
+        print(f"搜索内容: '{search_term}'")
+        print(f"区分大小写: {'是' if case_sensitive else '否'}")
+        print(f"{'='*60}\n")
+
+        # 搜索结果统计
+        total_matches = 0
+        found_pages = []
+
+        # 遍历每一页进行搜索
+        for page_num in range(num_pages):
+            page = reader.pages[page_num]
+            text = page.extract_text()
+
+            # 根据是否区分大小写进行搜索
+            if case_sensitive:
+                matches = list(re.finditer(re.escape(search_term), text))
+            else:
+                matches = list(re.finditer(re.escape(search_term), text, re.IGNORECASE))
+
+            # 如果找到匹配项
+            if matches:
+                found_pages.append(page_num + 1)
+                match_count = len(matches)
+                total_matches += match_count
+
+                print(f"第 {page_num + 1} 页 - 找到 {match_count} 处匹配:")
+                print("-" * 60)
+
+                # 显示每个匹配的上下文
+                for idx, match in enumerate(matches, 1):
+                    start = match.start()
+                    end = match.end()
+
+                    # 获取上下文
+                    context_start = max(0, start - context_chars)
+                    context_end = min(len(text), end + context_chars)
+
+                    # 提取上下文文本
+                    before = text[context_start:start]
+                    matched = text[start:end]
+                    after = text[end:context_end]
+
+                    # 清理换行符以便更好地显示
+                    before = before.replace('\n', ' ').strip()
+                    after = after.replace('\n', ' ').strip()
+
+                    # 显示结果
+                    print(f"  [{idx}] ...{before}【{matched}】{after}...")
+
+                print()
+
+        # 显示总结
+        print("=" * 60)
+        if total_matches > 0:
+            print(f"搜索完成！")
+            print(f"共在 {len(found_pages)} 页中找到 {total_matches} 处匹配")
+            print(f"页码: {', '.join(map(str, found_pages))}")
+        else:
+            print(f"未找到匹配内容")
+        print("=" * 60)
+
+        return total_matches > 0
+
+    except Exception as e:
+        print(f"搜索PDF时出错: {e}")
+        return False
+
+
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(
@@ -92,6 +188,8 @@ def main():
   %(prog)s document.pdf -p 1         # 只读取第1页
   %(prog)s document.pdf -m           # 显示PDF元数据
   %(prog)s document.pdf -p 3 -m      # 读取第3页并显示元数据
+  %(prog)s document.pdf -s "关键词"  # 搜索PDF中的关键词
+  %(prog)s document.pdf -s "word" -c # 区分大小写搜索
         """
     )
 
@@ -113,10 +211,35 @@ def main():
         help='显示PDF元数据信息'
     )
 
+    parser.add_argument(
+        '-s', '--search',
+        type=str,
+        metavar='TEXT',
+        help='在PDF中搜索指定文本内容'
+    )
+
+    parser.add_argument(
+        '-c', '--case-sensitive',
+        action='store_true',
+        help='搜索时区分大小写（默认不区分）'
+    )
+
+    parser.add_argument(
+        '--context',
+        type=int,
+        default=50,
+        metavar='CHARS',
+        help='搜索结果显示的上下文字符数（默认50）'
+    )
+
     args = parser.parse_args()
 
-    # 读取PDF
-    success = read_pdf(args.pdf_file, args.page, args.metadata)
+    # 如果是搜索模式
+    if args.search:
+        success = search_pdf(args.pdf_file, args.search, args.case_sensitive, args.context)
+    else:
+        # 读取PDF
+        success = read_pdf(args.pdf_file, args.page, args.metadata)
 
     sys.exit(0 if success else 1)
 
