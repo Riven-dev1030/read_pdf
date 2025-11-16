@@ -464,7 +464,7 @@ class PDFReaderGUI:
         summary += f"  - 总匹配次数: {total_matches}\n\n"
 
         if total_matches > 0:
-            summary += f"请在左侧查看详细结果，双击可查看具体位置。\n"
+            summary += f"请在左侧查看详细结果。\n"
         else:
             summary += f"未找到匹配内容。\n"
 
