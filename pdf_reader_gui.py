@@ -355,7 +355,7 @@ class PDFReaderGUI:
         if total_matches > 0:
             pages_with_matches = len(set(r['page'] for r in self.search_results))
             self.result_count_label.config(
-                text=f"搜索结果: {total_matches} 处匹配，共 {pages_with_matches} 页",
+                text=f"搜索结果: {total_matches} 处匹配，共 {pages_with_matches} 页。双击结果可跳转！",
                 foreground="green"
             )
 
@@ -552,7 +552,7 @@ class PDFReaderGUI:
 
         # 计算目标位置
         # 需要找到对应页面在文本框中的位置
-        target_line = 1.0
+        target_line = 1
 
         # 累计前面所有页面的行数
         for i in range(page_num - 1):
