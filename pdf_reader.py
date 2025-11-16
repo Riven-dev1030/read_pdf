@@ -122,41 +122,60 @@ def search_pdf(pdf_path, search_term, case_sensitive=False, context_chars=50):
             page = reader.pages[page_num]
             text = page.extract_text()
 
-            # 根据是否区分大小写进行搜索
-            if case_sensitive:
-                matches = list(re.finditer(re.escape(search_term), text))
-            else:
-                matches = list(re.finditer(re.escape(search_term), text, re.IGNORECASE))
+            # 将文本按行分割
+            lines = text.split('\n')
 
-            # 如果找到匹配项
-            if matches:
-                found_pages.append(page_num + 1)
-                match_count = len(matches)
-                total_matches += match_count
+            # 存储当前页的匹配结果
+            page_matches = []
 
-                print(f"第 {page_num + 1} 页 - 找到 {match_count} 处匹配:")
-                print("-" * 60)
+            # 在每一行中搜索
+            for line_num, line in enumerate(lines, 1):
+                # 根据是否区分大小写进行搜索
+                if case_sensitive:
+                    matches = list(re.finditer(re.escape(search_term), line))
+                else:
+                    matches = list(re.finditer(re.escape(search_term), line, re.IGNORECASE))
 
-                # 显示每个匹配的上下文
-                for idx, match in enumerate(matches, 1):
+                # 如果在这一行找到匹配
+                for match in matches:
                     start = match.start()
                     end = match.end()
 
                     # 获取上下文
                     context_start = max(0, start - context_chars)
-                    context_end = min(len(text), end + context_chars)
+                    context_end = min(len(line), end + context_chars)
 
                     # 提取上下文文本
-                    before = text[context_start:start]
-                    matched = text[start:end]
-                    after = text[end:context_end]
+                    before = line[context_start:start]
+                    matched = line[start:end]
+                    after = line[end:context_end]
 
-                    # 清理换行符以便更好地显示
-                    before = before.replace('\n', ' ').strip()
-                    after = after.replace('\n', ' ').strip()
+                    # 保存匹配信息
+                    page_matches.append({
+                        'line_num': line_num,
+                        'before': before.strip(),
+                        'matched': matched,
+                        'after': after.strip()
+                    })
 
-                    # 显示结果
-                    print(f"  [{idx}] ...{before}【{matched}】{after}...")
+            # 如果当前页有匹配项
+            if page_matches:
+                found_pages.append(page_num + 1)
+                match_count = len(page_matches)
+                total_matches += match_count
+
+                print(f"第 {page_num + 1} 页 - 找到 {match_count} 处匹配:")
+                print("-" * 60)
+
+                # 显示每个匹配的详细信息
+                for idx, match_info in enumerate(page_matches, 1):
+                    line_num = match_info['line_num']
+                    before = match_info['before']
+                    matched = match_info['matched']
+                    after = match_info['after']
+
+                    # 显示结果（包含行号）
+                    print(f"  [{idx}] 第 {line_num} 行: ...{before}【{matched}】{after}...")
 
                 print()
 

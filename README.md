@@ -94,6 +94,7 @@ python pdf_reader.py contract.pdf -s "Section 3.1" -c
 搜索功能会：
 - 🔍 扫描PDF的所有页面
 - 📄 显示包含关键词的所有页码
+- 📍 **精确显示每个匹配在第几页第几行**
 - 📊 统计每页找到的匹配次数
 - 📝 显示每个匹配项的上下文内容（用【】标记）
 - ✅ 支持中英文搜索
@@ -108,12 +109,12 @@ PDF文件: example.pdf
 
 第 1 页 - 找到 2 处匹配:
 ------------------------------------------------------------
-  [1] ...This guide introduces【Python】programming language...
-  [2] ...Learn【Python】in 30 days with...
+  [1] 第 3 行: ...This guide introduces【Python】programming language...
+  [2] 第 15 行: ...Learn【Python】in 30 days with...
 
 第 5 页 - 找到 1 处匹配:
 ------------------------------------------------------------
-  [1] ...Advanced【Python】techniques for...
+  [1] 第 7 行: ...Advanced【Python】techniques for...
 
 ============================================================
 搜索完成！
