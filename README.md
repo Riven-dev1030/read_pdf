@@ -318,3 +318,49 @@ MIT License
 - 复杂排版的PDF可能会影响文本提取的格式
 - This tool extracts text content from PDFs. It may not work well with image-based PDFs (scanned documents)
 - Complex PDF layouts may affect the formatting of extracted text
+
+---
+
+## 开发历史 Development History
+
+### 2025-11-16: 合并 GUI 功能分支
+**合并分支**: `claude/merge-feature-branches-01Chx3cpQ5JXSEtR9LbsxVJP`
+
+**合并来源**:
+1. `claude/gui-new-branch-01K1mT1Ji6LsdptPLuY4SuWZ`
+2. `claude/double-click-string-location-01TpmCLx87NqjZzi8xyH7DNd`
+
+**合并原因**:
+- 将两个独立开发的 GUI 功能整合到一起
+- 第一个分支提供了基础的 GUI 界面和批量搜索功能
+- 第二个分支改进了用户体验，修复了双击跳转功能和提示文字
+
+**主要变更**:
+1. **GUI 基础功能** (来自 gui-new-branch):
+   - ✅ 添加了完整的 Tkinter GUI 界面 (`pdf_reader_gui.py`)
+   - ✅ 实现批量搜索功能：可打开文件夹搜索多个 PDF 文件
+   - ✅ 添加 `.gitignore` 文件排除 Python 缓存文件
+   - ✅ 左右分栏布局：搜索控制面板 + 内容显示区域
+   - ✅ 搜索结果以树状列表显示（文件名、页码、行号、内容预览）
+
+2. **用户体验改进** (来自 double-click-string-location):
+   - ✅ 修复了双击搜索结果的跳转功能
+   - ✅ 改进了提示文字："双击结果可跳转！"
+   - ✅ 优化了变量初始化（`target_line` 使用整数而非浮点数）
+   - ✅ 批量搜索模式下也有清晰的双击提示
+
+**解决的冲突**:
+- 文件: `pdf_reader_gui.py`
+- 冲突位置: 搜索结果提示文字、批量搜索提示文字、target_line 变量初始化
+- 解决方案: 保留了更详细、用户友好的提示信息，确保用户知道可以双击跳转
+
+**技术细节**:
+- 搜索结果统计提示: `"搜索结果: {N} 处匹配，共 {M} 页。双击结果可跳转！"`
+- 批量搜索提示: `"请在左侧查看详细结果，双击可查看具体位置。"`
+- 跳转功能使用整数行号计算，避免浮点数精度问题
+
+**为什么要合并**:
+这两个分支都是对 GUI 功能的增强，分开维护会导致功能碎片化。合并后：
+- 用户可以同时使用批量搜索和精确跳转功能
+- 界面提示更加清晰，用户体验更好
+- 代码库更整洁，便于后续维护和功能扩展
