@@ -1,11 +1,17 @@
 # PDF Reader - PDF阅读器
 
-一个简单易用的Python PDF阅读工具，可以提取和显示PDF文件的文本内容。
+一个简单易用的Python PDF阅读工具，提供命令行和图形界面两种使用方式。
 
-A simple and easy-to-use Python PDF reading tool that can extract and display text content from PDF files.
+A simple and easy-to-use Python PDF reading tool that can extract and display text content from PDF files, with both CLI and GUI versions.
+
+## 版本说明 Versions
+
+- 📟 **命令行版本** (`pdf_reader.py`) - 适合批处理和脚本调用
+- 🖥️ **图形界面版本** (`pdf_reader_gui.py`) - 提供可视化操作界面
 
 ## 功能特性 Features
 
+### 命令行版本 CLI Version
 - 📖 读取整个PDF文件或指定页面
 - 📊 显示PDF基本信息（总页数）
 - 📋 提取PDF元数据（作者、标题等）
@@ -14,6 +20,16 @@ A simple and easy-to-use Python PDF reading tool that can extract and display te
 - 🔤 支持大小写敏感/不敏感搜索
 - 💻 支持命令行参数
 - 🌏 中文友好
+
+### 图形界面版本 GUI Version
+- 🖱️ **可视化操作**：点击按钮打开文件、搜索内容
+- 📑 **左右分栏布局**：左侧搜索控制，右侧内容显示
+- 🔍 **实时搜索**：输入关键词即可搜索整个PDF
+- 📍 **搜索结果列表**：显示页码、行号和内容预览
+- 🎯 **快速跳转**：双击搜索结果直接跳转到对应位置
+- 💡 **黄色高亮**：自动高亮所有匹配的关键词
+- 📊 **统计信息**：显示匹配数量和所在页面
+- ⚙️ **搜索选项**：支持区分/不区分大小写
 
 ## 安装 Installation
 
@@ -26,9 +42,60 @@ pip install -r requirements.txt
 
 ## 使用方法 Usage
 
-### 基本用法
+### 图形界面版本 GUI Version
 
-#### 阅读PDF
+#### 启动 GUI
+```bash
+python pdf_reader_gui.py
+```
+
+#### 使用步骤
+1. **打开文件**：点击「打开 PDF 文件」按钮，选择要阅读的 PDF
+2. **浏览内容**：右侧窗口会自动显示所有页面的文本内容
+3. **搜索关键词**：
+   - 在左侧搜索框输入关键词
+   - 可选：勾选「区分大小写」
+   - 点击「开始搜索」或按回车键
+4. **查看结果**：
+   - 左侧列表显示所有匹配项（页码、行号、内容预览）
+   - 右侧文本区域会用黄色高亮所有匹配
+5. **快速跳转**：双击搜索结果列表中的任意项，右侧内容会自动滚动到对应位置
+
+#### GUI 界面布局
+```
+┌─────────────────────────────────────────────────────────┐
+│  PDF 阅读器                                        - □ ×│
+├──────────────┬──────────────────────────────────────────┤
+│ 文件操作      │  PDF 内容                                │
+│ [打开PDF]    │  ═══════════════════════════════════════│
+│ 文件: xx.pdf │  第 1 页                                 │
+│ 总页数: 10   │  ═══════════════════════════════════════│
+│              │  这是PDF的文本内容...                     │
+│ 搜索功能      │  关键词会被【高亮】显示                   │
+│ 搜索内容:     │                                          │
+│ [         ]  │  ═══════════════════════════════════════│
+│ ☐ 区分大小写  │  第 2 页                                 │
+│ [开始搜索]    │  ═══════════════════════════════════════│
+│              │  继续显示内容...                          │
+│ 搜索结果: 5  │                                          │
+│              │                                          │
+│ 搜索结果列表: │                                          │
+│ ┌──────────┐│                                          │
+│ │页 行 内容 ││                                          │
+│ │1  3  ... ││                                          │
+│ │1  15 ... ││                                          │
+│ │5  7  ... ││                                          │
+│ └──────────┘│                                          │
+└──────────────┴──────────────────────────────────────────┘
+```
+
+---
+
+### 命令行版本 CLI Version
+
+#### 基本用法
+
+##### 阅读PDF
 ```bash
 # 读取整个PDF文件
 python pdf_reader.py document.pdf
@@ -125,8 +192,19 @@ PDF文件: example.pdf
 
 ## 系统要求 Requirements
 
+### 命令行版本 CLI Version
 - Python 3.6+
 - pypdf 库
+
+### 图形界面版本 GUI Version
+- Python 3.6+
+- pypdf 库
+- tkinter（Python 内置，通常无需单独安装）
+
+> **注意**：在某些 Linux 系统上，可能需要安装 tkinter：
+> - Ubuntu/Debian: `sudo apt-get install python3-tk`
+> - Fedora: `sudo dnf install python3-tkinter`
+> - Arch Linux: `sudo pacman -S tk`
 
 ## 许可证 License
 
