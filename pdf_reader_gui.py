@@ -6,15 +6,44 @@ PDF Reader GUI - 基於 Tkinter 的 PDF 閱讀器圖形界面
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
+from tkinter import font as tkfont
 import re
+import sys
 from pathlib import Path
 try:
     from pypdf import PdfReader
 except ImportError:
     print("錯誤: 請先安裝 pypdf 函式庫")
     print("執行: pip install pypdf")
-    import sys
     sys.exit(1)
+
+
+def get_chinese_font():
+    """獲取適合的中文字體"""
+    # 嘗試多種字體，找到第一個可用的
+    font_candidates = [
+        ('Microsoft YaHei', 10),      # Windows
+        ('微軟正黑體', 10),            # Windows 繁體
+        ('PingFang TC', 10),          # macOS 繁體
+        ('PingFang SC', 10),          # macOS 簡體
+        ('Noto Sans CJK TC', 10),     # Linux 繁體
+        ('Noto Sans CJK SC', 10),     # Linux 簡體
+        ('WenQuanYi Micro Hei', 10),  # Linux
+        ('AR PL UMing TW', 10),       # Linux 繁體
+        ('DejaVu Sans', 10),          # 通用後備字體
+        ('TkDefaultFont', 10)         # Tk 預設字體
+    ]
+
+    # 獲取系統可用字體列表
+    available_fonts = tkfont.families()
+
+    # 嘗試找到第一個可用的字體
+    for font_name, font_size in font_candidates:
+        if font_name in available_fonts or font_name == 'TkDefaultFont':
+            return (font_name, font_size)
+
+    # 如果都不可用，返回預設字體但加大字號
+    return ('TkDefaultFont', 11)
 
 
 class PDFReaderGUI:
@@ -22,6 +51,13 @@ class PDFReaderGUI:
         self.root = root
         self.root.title("PDF 閱讀器")
         self.root.geometry("1200x700")
+
+        # 設置全局默認字體以支持中文
+        chinese_font = get_chinese_font()
+        default_font = tkfont.nametofont("TkDefaultFont")
+        default_font.configure(family=chinese_font[0], size=chinese_font[1])
+        text_font = tkfont.nametofont("TkTextFont")
+        text_font.configure(family=chinese_font[0], size=chinese_font[1])
 
         # 資料儲存
         self.pdf_reader = None
@@ -157,10 +193,11 @@ class PDFReaderGUI:
         content_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         # 文本顯示區域（帶滾動條）
+        chinese_font = get_chinese_font()
         self.text_display = scrolledtext.ScrolledText(
             content_frame,
             wrap=tk.WORD,
-            font=('Microsoft YaHei', 10),
+            font=chinese_font,
             state=tk.DISABLED
         )
         self.text_display.pack(fill=tk.BOTH, expand=True)
