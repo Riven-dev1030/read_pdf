@@ -10,11 +10,25 @@ from tkinter import font as tkfont
 import re
 import sys
 from pathlib import Path
+
+# 嘗試導入 PDF 庫
 try:
     from pypdf import PdfReader
+    PYPDF_AVAILABLE = True
 except ImportError:
-    print("錯誤: 請先安裝 pypdf 函式庫")
-    print("執行: pip install pypdf")
+    PYPDF_AVAILABLE = False
+    print("警告: pypdf 未安裝")
+
+try:
+    import pdfplumber
+    PDFPLUMBER_AVAILABLE = True
+except ImportError:
+    PDFPLUMBER_AVAILABLE = False
+    print("警告: pdfplumber 未安裝")
+
+if not PYPDF_AVAILABLE and not PDFPLUMBER_AVAILABLE:
+    print("錯誤: 請至少安裝一個 PDF 函式庫")
+    print("執行: pip install -r requirements.txt")
     sys.exit(1)
 
 
@@ -44,6 +58,71 @@ def get_chinese_font():
 
     # 如果都不可用，返回預設字體但加大字號
     return ('TkDefaultFont', 11)
+
+
+def extract_text_from_pdf(pdf_path):
+    """
+    智能提取 PDF 文本，自動選擇最佳的 PDF 庫
+
+    Returns:
+        tuple: (all_pages_text, library_used, has_chinese)
+            - all_pages_text: 所有頁面文本列表
+            - library_used: 使用的庫名稱 ('pypdf' 或 'pdfplumber')
+            - has_chinese: 是否包含中文字符
+    """
+    all_pages_text = []
+    library_used = None
+    has_chinese = False
+
+    # 優先嘗試 pypdf
+    if PYPDF_AVAILABLE:
+        try:
+            reader = PdfReader(pdf_path)
+            for page in reader.pages:
+                text = page.extract_text()
+                all_pages_text.append(text)
+
+            # 檢查是否包含中文
+            all_text = ''.join(all_pages_text)
+            chinese_chars = sum(1 for c in all_text if '\u4e00' <= c <= '\u9fff')
+            has_chinese = chinese_chars > 0
+            library_used = 'pypdf'
+
+            # 如果沒有中文但原本應該有（檢測到 PUA 字符），切換到 pdfplumber
+            pua_chars = sum(1 for c in all_text if '\ue000' <= c <= '\uf8ff')
+            if not has_chinese and pua_chars > 10 and PDFPLUMBER_AVAILABLE:
+                print(f"pypdf 提取到 {pua_chars} 個私有區字符，切換到 pdfplumber")
+                all_pages_text = []
+                library_used = None
+            else:
+                return (all_pages_text, library_used, has_chinese)
+        except Exception as e:
+            print(f"pypdf 提取失敗: {e}")
+            all_pages_text = []
+
+    # 如果 pypdf 失敗或不可用，使用 pdfplumber
+    if PDFPLUMBER_AVAILABLE and library_used is None:
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text() or ""
+                    all_pages_text.append(text)
+
+            # 檢查是否包含中文
+            all_text = ''.join(all_pages_text)
+            chinese_chars = sum(1 for c in all_text if '\u4e00' <= c <= '\u9fff')
+            has_chinese = chinese_chars > 0
+            library_used = 'pdfplumber'
+
+            return (all_pages_text, library_used, has_chinese)
+        except Exception as e:
+            print(f"pdfplumber 提取失敗: {e}")
+            raise
+
+    if not all_pages_text:
+        raise Exception("所有 PDF 庫都無法提取文本")
+
+    return (all_pages_text, library_used, has_chinese)
 
 
 class PDFReaderGUI:
@@ -217,8 +296,6 @@ class PDFReaderGUI:
             return
 
         try:
-            # 開啟 PDF
-            self.pdf_reader = PdfReader(file_path)
             self.pdf_path = Path(file_path)
 
             # 切換到單檔案模式
@@ -226,16 +303,18 @@ class PDFReaderGUI:
             self.pdf_directory = None
             self.pdf_files = []
 
-            # 提取所有頁面文本
-            self.all_pages_text = []
-            for page in self.pdf_reader.pages:
-                text = page.extract_text()
-                self.all_pages_text.append(text)
+            # 使用智能提取函數
+            self.all_pages_text, library_used, has_chinese = extract_text_from_pdf(file_path)
 
             # 更新界面顯示
-            num_pages = len(self.pdf_reader.pages)
+            num_pages = len(self.all_pages_text)
             self.file_label.config(text=f"檔案: {self.pdf_path.name}", foreground="black")
-            self.info_label.config(text=f"總頁數: {num_pages}")
+
+            # 顯示使用的庫和中文檢測結果
+            info_text = f"總頁數: {num_pages} | 使用: {library_used}"
+            if not has_chinese:
+                info_text += " | ⚠️ 未檢測到中文"
+            self.info_label.config(text=info_text)
 
             # 顯示所有頁面內容
             self.display_all_pages()
@@ -243,7 +322,13 @@ class PDFReaderGUI:
             # 清空搜尋結果
             self.clear_search_results()
 
-            messagebox.showinfo("成功", f"已成功開啟 PDF 檔案\n總頁數: {num_pages}")
+            # 顯示成功訊息
+            success_msg = f"已成功開啟 PDF 檔案\n總頁數: {num_pages}\n使用庫: {library_used}"
+            if not has_chinese:
+                success_msg += "\n\n⚠️ 警告: 未檢測到中文字符"
+                if library_used == 'pypdf' and PDFPLUMBER_AVAILABLE:
+                    success_msg += "\n已自動切換到 pdfplumber 嘗試提取"
+            messagebox.showinfo("成功", success_msg)
 
         except Exception as e:
             messagebox.showerror("錯誤", f"開啟 PDF 檔案時出錯:\n{str(e)}")
