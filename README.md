@@ -1,24 +1,24 @@
-# PDF Reader - PDF阅读器
+# PDF Reader - PDF閱讀器
 
-一个简单易用的Python PDF阅读工具，可以提取和显示PDF文件的文本内容。
+一個簡單易用的Python PDF閱讀工具，可以提取和顯示PDF檔案的文本內容。
 
 A simple and easy-to-use Python PDF reading tool that can extract and display text content from PDF files.
 
 ## 功能特性 Features
 
-- 📖 读取整个PDF文件或指定页面
-- 📊 显示PDF基本信息（总页数）
-- 📋 提取PDF元数据（作者、标题等）
-- 🔍 **搜索功能**：在PDF中查找关键词并显示位置
-- 📍 显示搜索结果的上下文内容
-- 🔤 支持大小写敏感/不敏感搜索
-- 💻 支持命令行参数
+- 📖 讀取整個PDF檔案或指定頁面
+- 📊 顯示PDF基本資訊（總頁數）
+- 📋 提取PDF元資料（作者、標題等）
+- 🔍 **搜尋功能**：在PDF中查找關鍵詞並顯示位置
+- 📍 顯示搜尋結果的上下文內容
+- 🔤 支援大小寫敏感/不敏感搜尋
+- 💻 支援命令列參數
 - 🌏 中文友好
 
-## 安装 Installation
+## 安裝 Installation
 
-1. 克隆仓库或下载文件
-2. 安装依赖：
+1. 複製倉庫或下載檔案
+2. 安裝依賴：
 
 ```bash
 pip install -r requirements.txt
@@ -28,117 +28,117 @@ pip install -r requirements.txt
 
 ### 基本用法
 
-#### 阅读PDF
+#### 閱讀PDF
 ```bash
-# 读取整个PDF文件
+# 讀取整個PDF檔案
 python pdf_reader.py document.pdf
 
-# 读取指定页（例如第1页）
+# 讀取指定頁（例如第1頁）
 python pdf_reader.py document.pdf -p 1
 
-# 显示PDF元数据
+# 顯示PDF元資料
 python pdf_reader.py document.pdf -m
 
-# 读取第3页并显示元数据
+# 讀取第3頁並顯示元資料
 python pdf_reader.py document.pdf -p 3 -m
 ```
 
-#### 搜索PDF内容
+#### 搜尋PDF內容
 ```bash
-# 搜索PDF中的关键词（不区分大小写）
-python pdf_reader.py document.pdf -s "关键词"
+# 搜尋PDF中的關鍵詞（不區分大小寫）
+python pdf_reader.py document.pdf -s "關鍵詞"
 
-# 搜索英文关键词
+# 搜尋英文關鍵詞
 python pdf_reader.py document.pdf -s "keyword"
 
-# 区分大小写搜索
+# 區分大小寫搜尋
 python pdf_reader.py document.pdf -s "KeyWord" -c
 
-# 自定义显示的上下文字符数（默认50字符）
-python pdf_reader.py document.pdf -s "搜索内容" --context 100
+# 自訂顯示的上下文字元數（預設50字元）
+python pdf_reader.py document.pdf -s "搜尋內容" --context 100
 ```
 
-### 命令行参数
+### 命令列參數
 
-#### 基本参数
-- `pdf_file`: PDF文件路径（必需）
-- `-h, --help`: 显示帮助信息
+#### 基本參數
+- `pdf_file`: PDF檔案路徑（必需）
+- `-h, --help`: 顯示幫助資訊
 
-#### 阅读模式
-- `-p, --page NUM`: 指定要读取的页码（从1开始）
-- `-m, --metadata`: 显示PDF元数据信息
+#### 閱讀模式
+- `-p, --page NUM`: 指定要讀取的頁碼（從1開始）
+- `-m, --metadata`: 顯示PDF元資料資訊
 
-#### 搜索模式
-- `-s, --search TEXT`: 在PDF中搜索指定文本内容
-- `-c, --case-sensitive`: 搜索时区分大小写（默认不区分）
-- `--context CHARS`: 搜索结果显示的上下文字符数（默认50）
+#### 搜尋模式
+- `-s, --search TEXT`: 在PDF中搜尋指定文本內容
+- `-c, --case-sensitive`: 搜尋時區分大小寫（預設不區分）
+- `--context CHARS`: 搜尋結果顯示的上下文字元數（預設50）
 
 ### 示例
 
 ```bash
-# 读取报告PDF的第5页
+# 讀取報告PDF的第5頁
 python pdf_reader.py report.pdf --page 5
 
-# 查看PDF的元数据信息
+# 查看PDF的元資料資訊
 python pdf_reader.py book.pdf --metadata
 
-# 在技术文档中搜索"API"关键词
+# 在技術文檔中搜尋"API"關鍵詞
 python pdf_reader.py technical_doc.pdf -s "API"
 
-# 在合同中区分大小写搜索"Section 3.1"
+# 在合同中區分大小寫搜尋"Section 3.1"
 python pdf_reader.py contract.pdf -s "Section 3.1" -c
 ```
 
-### 搜索功能说明
+### 搜尋功能說明
 
-搜索功能会：
-- 🔍 扫描PDF的所有页面
-- 📄 显示包含关键词的所有页码
-- 📍 **精确显示每个匹配在第几页第几行**
-- 📊 统计每页找到的匹配次数
-- 📝 显示每个匹配项的上下文内容（用【】标记）
-- ✅ 支持中英文搜索
+搜尋功能會：
+- 🔍 掃描PDF的所有頁面
+- 📄 顯示包含關鍵詞的所有頁碼
+- 📍 **精確顯示每個匹配在第幾頁第幾行**
+- 📊 統計每頁找到的匹配次數
+- 📝 顯示每個匹配項的上下文內容（用【】標記）
+- ✅ 支援中英文搜尋
 
-搜索结果示例：
+搜尋結果示例：
 ```
 ============================================================
-PDF文件: example.pdf
-搜索内容: 'Python'
-区分大小写: 否
+PDF檔案: example.pdf
+搜尋內容: 'Python'
+區分大小寫: 否
 ============================================================
 
-第 1 页 - 找到 2 处匹配:
+第 1 頁 - 找到 2 處匹配:
 ------------------------------------------------------------
   [1] 第 3 行: ...This guide introduces【Python】programming language...
   [2] 第 15 行: ...Learn【Python】in 30 days with...
 
-第 5 页 - 找到 1 处匹配:
+第 5 頁 - 找到 1 處匹配:
 ------------------------------------------------------------
   [1] 第 7 行: ...Advanced【Python】techniques for...
 
 ============================================================
-搜索完成！
-共在 2 页中找到 3 处匹配
-页码: 1, 5
+搜尋完成！
+共在 2 頁中找到 3 處匹配
+頁碼: 1, 5
 ============================================================
 ```
 
-## 系统要求 Requirements
+## 系統要求 Requirements
 
 - Python 3.6+
-- pypdf 库
+- pypdf 函式庫
 
-## 许可证 License
+## 授權條款 License
 
 MIT License
 
-## 贡献 Contributing
+## 貢獻 Contributing
 
-欢迎提交Issue和Pull Request！
+歡迎提交Issue和Pull Request！
 
-## 注意事项 Notes
+## 注意事項 Notes
 
-- 此工具提取的是PDF中的文本内容，对于图片型PDF（扫描件）可能无法提取文字
-- 复杂排版的PDF可能会影响文本提取的格式
+- 此工具提取的是PDF中的文本內容，對於圖片型PDF（掃描檔）可能無法提取文字
+- 複雜排版的PDF可能會影響文本提取的格式
 - This tool extracts text content from PDFs. It may not work well with image-based PDFs (scanned documents)
 - Complex PDF layouts may affect the formatting of extracted text
