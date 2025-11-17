@@ -20,7 +20,7 @@ except ImportError:
 class PDFReaderGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("PDF 閱讀器")
+        self.root.title("PDF 爬蟲")
         self.root.geometry("1200x700")
 
         # 資料儲存
