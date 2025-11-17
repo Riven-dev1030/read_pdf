@@ -35,12 +35,66 @@ A simple and easy-to-use Python PDF reading tool that can extract and display te
 
 ## 安裝 Installation
 
-1. 複製倉庫或下載檔案
-2. 安裝依賴：
+### 1. 複製倉庫或下載檔案
+
+### 2. 安裝 Python 依賴
 
 ```bash
 pip install -r requirements.txt
 ```
+
+### 3. 安裝系統依賴（僅圖形介面版本需要）
+
+圖形介面版本需要 tkinter 和中文字體支援。
+
+#### Ubuntu/Debian 系統：
+
+**快速安裝（推薦）：**
+```bash
+./install_dependencies.sh
+```
+
+**或手動安裝：**
+```bash
+# 安裝 Tkinter
+sudo apt-get update
+sudo apt-get install python3-tk
+
+# 安裝中文字體
+sudo apt-get install fonts-noto-cjk fonts-wqy-microhei
+```
+
+#### Fedora 系統：
+```bash
+# 安裝 Tkinter
+sudo dnf install python3-tkinter
+
+# 安裝中文字體
+sudo dnf install google-noto-sans-cjk-fonts
+```
+
+#### Arch Linux 系統：
+```bash
+# 安裝 Tkinter
+sudo pacman -S tk
+
+# 安裝中文字體
+sudo pacman -S noto-fonts-cjk
+```
+
+#### macOS 系統：
+```bash
+# macOS 通常已內建 tkinter 和中文字體
+# 如果缺少中文字體，可以從系統設定安裝
+```
+
+#### Windows 系統：
+```
+# Windows 通常已內建 tkinter 和中文字體
+# 無需額外安裝
+```
+
+> **重要提示**：如果 GUI 介面中文顯示為方框（■），說明系統缺少中文字體。請按照上述說明安裝中文字體後重新啟動程序。
 
 ## 使用方法 Usage
 
